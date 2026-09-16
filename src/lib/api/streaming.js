@@ -1,86 +1,62 @@
 // src/lib/api/streaming.js
+// Streaming via Miruro embed providers.
+// No scraping, no backend, no Cloudflare — pure iframe embeds.
 
-const API_BASE = "/api/consumet";
+/**
+ * Available embed providers.
+ * Both are verified working from Pakistan and everywhere else.
+ */
+export const EMBED_PROVIDERS = [
+  {
+    id: "megavid",
+    name: "Megavid",
+    // Uses AniList ID (not MAL)
+    makeUrl(anilistId, episode, lang = "sub") {
+      return `https://megavid.buzz/ani/${anilistId}/${episode}/${lang}?autoplay=true`;
+    },
+  },
+  {
+    id: "anixo",
+    name: "AniXo",
+    makeUrl(anilistId, episode, lang = "sub") {
+      return `https://anixo.buzz/embed/ani/${anilistId}/${episode}/${lang}?autoplay=true`;
+    },
+  },
+];
 
-const DEFAULT_PROVIDER = "hianime";
+/** Default provider */
+export const DEFAULT_PROVIDER = "megavid";
 
-async function call(params) {
-  const url = new URL(API_BASE, window.location.origin);
-  Object.entries(params).forEach(([k, v]) => {
-    if (v != null) url.searchParams.set(k, v);
-  });
-
-  const res = await fetch(url.toString());
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || `Request failed (${res.status})`);
-  }
-  return res.json();
+/**
+ * Get a single embed URL.
+ */
+export function getEmbedUrl(
+  anilistId,
+  episode,
+  lang = "sub",
+  providerId = DEFAULT_PROVIDER,
+) {
+  const provider =
+    EMBED_PROVIDERS.find((p) => p.id === providerId) || EMBED_PROVIDERS[0];
+  return {
+    provider: provider.id,
+    providerName: provider.name,
+    url: provider.makeUrl(anilistId, episode, lang),
+  };
 }
 
-/* ---------------- Public API ---------------- */
-
-export const searchStream = (q, provider = DEFAULT_PROVIDER) =>
-  call({ provider, action: "search", q });
-
-export const getStreamInfo = (id, provider = DEFAULT_PROVIDER) =>
-  call({ provider, action: "info", id });
-
-export const getEpisodeSources = (episodeId, provider = DEFAULT_PROVIDER) =>
-  call({ provider, action: "watch", episodeId });
-
-export const getEpisodeServers = (episodeId, provider = DEFAULT_PROVIDER) =>
-  call({ provider, action: "servers", episodeId });
-
-/* ---------------- Matching ---------------- */
-
-export async function findStreamSource(anime) {
-  const providers = ["hianime", "animekai", "animepahe"];
-  const titles = [
-    anime.title_english,
-    anime.title_romaji,
-    anime.title,
-    anime.title_japanese,
-  ].filter(Boolean);
-
-  for (const provider of providers) {
-    for (const title of titles) {
-      try {
-        const data = await searchStream(title, provider);
-        const results = data?.results || [];
-        if (!results.length) continue;
-
-        const best = pickBestMatch(results, anime);
-        if (best) return { ...best, _provider: provider };
-      } catch {
-        continue;
-      }
-    }
-  }
-  return null;
+/**
+ * Get all embed URLs (for provider switching).
+ */
+export function getAllEmbedUrls(anilistId, episode, lang = "sub") {
+  return EMBED_PROVIDERS.map((p) => ({
+    id: p.id,
+    name: p.name,
+    url: p.makeUrl(anilistId, episode, lang),
+  }));
 }
 
-function pickBestMatch(results, anime) {
-  const targetYear = anime.year;
-  const targetEpisodes = anime.episodes;
-
-  const scored = results.map((r) => {
-    let score = 0;
-    const rTitle = String(r.title || "").toLowerCase();
-    const aTitle = String(
-      anime.title_english || anime.title_romaji || anime.title || "",
-    ).toLowerCase();
-
-    if (rTitle === aTitle) score += 60;
-    else if (rTitle.includes(aTitle) || aTitle.includes(rTitle)) score += 30;
-
-    if (targetYear && r.releaseDate?.includes(String(targetYear))) score += 25;
-    if (targetEpisodes && r.totalEpisodes === targetEpisodes) score += 20;
-    if (!rTitle.includes("dub")) score += 5;
-
-    return { ...r, _score: score };
-  });
-
-  scored.sort((a, b) => b._score - a._score);
-  return scored[0]?._score >= 25 ? scored[0] : null;
+/** Check if an anime is streamable (has an AniList or MAL ID). */
+export function isStreamable(anime) {
+  return !!(anime?.anilist_id || anime?.mal_id);
 }
