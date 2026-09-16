@@ -4,5 +4,5 @@
     "paths": { "@/*": ["src/*"] },
     "checkJs": false
   },
-  "include": ["src", "api/consumet"]
+  "include": ["src", "api/consumet", "api/consumet.js"]
 }
