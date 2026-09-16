@@ -1,15 +1,14 @@
 // src/lib/api/streaming.js
 
-const API_BASE = import.meta.env.DEV
-  ? "http://localhost:5173/api/consumet" // Vite dev proxies to /api
-  : "/api/consumet";
+const API_BASE = import.meta.env.DEV ? "/api/consumet" : "/api/consumet";
 
-async function call(provider, ...path) {
-  const url = `${API_BASE}/anime/${provider}/${path
-    .map((p) => encodeURIComponent(p))
-    .join("/")}`;
+async function call(params) {
+  const url = new URL(API_BASE, window.location.origin);
+  Object.entries(params).forEach(([k, v]) => {
+    if (v != null) url.searchParams.set(k, v);
+  });
 
-  const res = await fetch(url);
+  const res = await fetch(url.toString());
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.error || `Request failed (${res.status})`);
@@ -19,24 +18,20 @@ async function call(provider, ...path) {
 
 /* ---------------- Public API ---------------- */
 
-export const searchStream = (query, provider = "gogoanime") =>
-  call(provider, query);
+export const searchStream = (q, provider = "gogoanime") =>
+  call({ provider, action: "search", q });
 
 export const getStreamInfo = (id, provider = "gogoanime") =>
-  call(provider, "info", id);
+  call({ provider, action: "info", id });
 
 export const getEpisodeSources = (episodeId, provider = "gogoanime") =>
-  call(provider, "watch", episodeId);
+  call({ provider, action: "watch", episodeId });
 
 export const getEpisodeServers = (episodeId, provider = "gogoanime") =>
-  call(provider, "servers", episodeId);
+  call({ provider, action: "servers", episodeId });
 
 /* ---------------- Matching ---------------- */
 
-/**
- * Find the best streaming ID for an AniList anime.
- * Tries multiple title variants, scores each result, returns best.
- */
 export async function findStreamSource(anime, provider = "gogoanime") {
   const titles = [
     anime.title_english,
@@ -75,10 +70,7 @@ function pickBestMatch(results, anime) {
     else if (rTitle.includes(aTitle) || aTitle.includes(rTitle)) score += 30;
 
     if (targetYear && r.releaseDate?.includes(String(targetYear))) score += 25;
-
     if (targetEpisodes && r.totalEpisodes === targetEpisodes) score += 20;
-
-    // Prefer SUB over DUB
     if (!rTitle.includes("dub")) score += 5;
 
     return { ...r, _score: score };
