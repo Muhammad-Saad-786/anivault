@@ -58,11 +58,11 @@ export default function Watch() {
     retry: 1,
   });
 
-  /* Fetch episode list from Gogoanime */
-  const { data: streamInfo, isLoading: infoLoading } = useQuery({
-    queryKey: ["stream-info", streamSource?.id],
+  /* Fetch episode list from HiAnime */
+  const { data: streamInfo } = useQuery({
+    queryKey: ["stream-info", streamSource?.id, streamSource?._provider],
     enabled: !!streamSource?.id,
-    queryFn: () => getStreamInfo(streamSource.id),
+    queryFn: () => getStreamInfo(streamSource.id, streamSource._provider),
     staleTime: 30 * 60 * 1000,
   });
 
@@ -77,23 +77,26 @@ export default function Watch() {
       streamSource?.id,
       currentEpisode,
       selectedServer,
+      streamSource?._provider,
     ],
     enabled: !!streamSource?.id && !!streamInfo,
     queryFn: async () => {
+      const provider = streamSource._provider;
       const ep = streamInfo?.episodes?.find((e) => e.number === currentEpisode);
       if (!ep) throw new Error(`Episode ${currentEpisode} not found`);
 
-      // Get servers first
-      const serversData = await getEpisodeServers(ep.id);
+      let serversData = [];
+      try {
+        serversData = await getEpisodeServers(ep.id, provider);
+      } catch {
+        serversData = [];
+      }
 
-      // If no specific server selected, use the first one
-      const server = selectedServer || serversData?.[0]?.name || "vidstreaming";
-
-      const sources = await getEpisodeSources(ep.id);
+      const sources = await getEpisodeSources(ep.id, provider);
       return {
         sources,
         servers: serversData || [],
-        activeServer: server,
+        activeServer: selectedServer || serversData?.[0]?.name || "default",
         episode: ep,
       };
     },

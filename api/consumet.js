@@ -1,35 +1,38 @@
 // api/consumet.js
-import { ANIME } from "@consumet/extensions";
+import * as Consumet from "@consumet/extensions";
 
+const ANIME = Consumet.ANIME || Consumet.default?.ANIME;
+
+if (!ANIME) {
+  console.error("[consumet] ANIME namespace missing", Object.keys(Consumet));
+}
+
+// Providers available in current @consumet/extensions
 const providers = {
-  gogoanime: new ANIME.Gogoanime(),
-  zoro: new ANIME.Zoro(),
+  hianime: new ANIME.Hianime(),
   animepahe: new ANIME.AnimePahe(),
+  animekai: new ANIME.AnimeKai(),
+  kickassanime: new ANIME.KickAssAnime(),
+  animeunity: new ANIME.AnimeUnity(),
+  animesaturn: new ANIME.AnimeSaturn(),
 };
 
+export const DEFAULT_PROVIDER = "hianime";
+
 export default async function handler(req, res) {
-  // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "GET") return res.status(405).json({ error: "GET only" });
 
-  if (req.method !== "GET") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
-  // Query params:
-  //   ?provider=gogoanime&action=search&q=naruto
-  //   ?provider=gogoanime&action=info&id=naruto
-  //   ?provider=gogoanime&action=watch&episodeId=naruto-episode-1
-  //   ?provider=gogoanime&action=servers&episodeId=naruto-episode-1
-  const provider = req.query.provider || "gogoanime";
+  const providerName = req.query.provider || DEFAULT_PROVIDER;
   const action = req.query.action;
+  const impl = providers[providerName];
 
-  const impl = providers[provider];
   if (!impl) {
     return res.status(400).json({
-      error: `Unknown provider: ${provider}`,
+      error: `Unknown provider: ${providerName}`,
       available: Object.keys(providers),
     });
   }
@@ -48,7 +51,6 @@ export default async function handler(req, res) {
         );
         break;
       }
-
       case "info": {
         const id = req.query.id;
         if (!id) return res.status(400).json({ error: "Missing id" });
@@ -56,7 +58,6 @@ export default async function handler(req, res) {
         res.setHeader("Cache-Control", "s-maxage=1800");
         break;
       }
-
       case "watch": {
         const episodeId = req.query.episodeId;
         if (!episodeId)
@@ -64,7 +65,6 @@ export default async function handler(req, res) {
         data = await impl.fetchEpisodeSources(episodeId);
         break;
       }
-
       case "servers": {
         const episodeId = req.query.episodeId;
         if (!episodeId)
@@ -72,7 +72,6 @@ export default async function handler(req, res) {
         data = await impl.fetchEpisodeServers(episodeId);
         break;
       }
-
       default:
         return res.status(400).json({
           error: "Missing or unknown action",
@@ -82,10 +81,15 @@ export default async function handler(req, res) {
 
     return res.status(200).json(data);
   } catch (err) {
-    console.error("[consumet]", { provider, action, message: err.message });
+    console.error("[consumet]", {
+      provider: providerName,
+      action,
+      message: err.message,
+      stack: err.stack,
+    });
     return res.status(500).json({
       error: err.message || "Consumet fetch failed",
-      provider,
+      provider: providerName,
       action,
     });
   }

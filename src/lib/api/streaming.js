@@ -1,6 +1,8 @@
 // src/lib/api/streaming.js
 
-const API_BASE = import.meta.env.DEV ? "/api/consumet" : "/api/consumet";
+const API_BASE = "/api/consumet";
+
+const DEFAULT_PROVIDER = "hianime";
 
 async function call(params) {
   const url = new URL(API_BASE, window.location.origin);
@@ -18,21 +20,22 @@ async function call(params) {
 
 /* ---------------- Public API ---------------- */
 
-export const searchStream = (q, provider = "gogoanime") =>
+export const searchStream = (q, provider = DEFAULT_PROVIDER) =>
   call({ provider, action: "search", q });
 
-export const getStreamInfo = (id, provider = "gogoanime") =>
+export const getStreamInfo = (id, provider = DEFAULT_PROVIDER) =>
   call({ provider, action: "info", id });
 
-export const getEpisodeSources = (episodeId, provider = "gogoanime") =>
+export const getEpisodeSources = (episodeId, provider = DEFAULT_PROVIDER) =>
   call({ provider, action: "watch", episodeId });
 
-export const getEpisodeServers = (episodeId, provider = "gogoanime") =>
+export const getEpisodeServers = (episodeId, provider = DEFAULT_PROVIDER) =>
   call({ provider, action: "servers", episodeId });
 
 /* ---------------- Matching ---------------- */
 
-export async function findStreamSource(anime, provider = "gogoanime") {
+export async function findStreamSource(anime) {
+  const providers = ["hianime", "animekai", "animepahe"];
   const titles = [
     anime.title_english,
     anime.title_romaji,
@@ -40,16 +43,18 @@ export async function findStreamSource(anime, provider = "gogoanime") {
     anime.title_japanese,
   ].filter(Boolean);
 
-  for (const title of titles) {
-    try {
-      const data = await searchStream(title, provider);
-      const results = data?.results || [];
-      if (!results.length) continue;
+  for (const provider of providers) {
+    for (const title of titles) {
+      try {
+        const data = await searchStream(title, provider);
+        const results = data?.results || [];
+        if (!results.length) continue;
 
-      const best = pickBestMatch(results, anime);
-      if (best) return best;
-    } catch {
-      continue;
+        const best = pickBestMatch(results, anime);
+        if (best) return { ...best, _provider: provider };
+      } catch {
+        continue;
+      }
     }
   }
   return null;
