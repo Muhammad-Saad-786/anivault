@@ -1,0 +1,126 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+@theme {
+  --color-brand: #f60200;
+  --color-brand-hover: #d40200;
+  --color-brand-soft: #f602001a;
+
+  --color-surface-dark: #161616;
+  --color-surface-darker: #0d0d0d;
+  --color-surface-card: #1f1f1f;
+  --color-surface-elevated: #242424;
+  --color-border-dark: #262626;
+
+  --color-surface-light: #f8f9fa;
+  --color-surface-light-card: #ffffff;
+  --color-border-light: #e5e7eb;
+
+  --color-text-primary: #f5f5f5;
+  --color-text-secondary: #a3a3a3;
+  --color-text-muted: #6b6b6b;
+
+  --color-status-watching: #3b82f6;
+  --color-status-completed: #22c55e;
+  --color-status-plan: #a855f7;
+  --color-status-onhold: #f59e0b;
+  --color-status-dropped: #ef4444;
+  --color-status-rewatching: #06b6d4;
+  --color-status-favorite: #ec4899;
+
+  --radius-card: 0.75rem;
+  --radius-pill: 9999px;
+
+  --shadow-card: 0 4px 20px -4px rgb(0 0 0 / 0.4);
+  --shadow-glow: 0 0 24px -4px rgb(246 2 0 / 0.4);
+
+  --animate-fade-in: fade-in 0.3s ease-out;
+  --animate-slide-up: slide-up 0.35s ease-out;
+  --animate-pulse-soft: pulse-soft 2s ease-in-out infinite;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    margin: 0;
+    background-color: var(--color-surface-darker);
+    color: var(--color-text-primary);
+    font-family:
+      -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+      Cantarell, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection {
+    background: var(--color-brand);
+    color: #fff;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-surface-darker);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border-dark);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #3a3a3a;
+  }
+}
+
+@layer components {
+  .badge-red {
+    @apply inline-flex items-center gap-1 rounded-full bg-brand px-2.5 py-1 text-xs font-semibold text-white;
+  }
+  .card {
+    @apply rounded-card border border-border-dark bg-surface-card;
+  }
+  .btn-brand {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-hover disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-border-dark bg-transparent px-4 py-2 text-sm font-medium text-text-primary transition hover:bg-surface-elevated;
+  }
+  .input-dark {
+    @apply w-full rounded-lg border border-border-dark bg-surface-dark px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-brand focus:outline-none;
+  }
+  .skeleton {
+    @apply animate-pulse-soft rounded-md bg-surface-elevated;
+  }
+}
