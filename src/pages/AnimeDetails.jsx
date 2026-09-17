@@ -190,8 +190,10 @@ export default function AnimeDetails() {
             </div>
 
             <div className="mt-5 flex flex-wrap gap-3">
-              <Link className="btn-brand !px-6 !py-2.5">
-                to={`/watch/${anime.anilist_id || anime.mal_id}`}
+              <Link
+                to={`/watch/${anime.anilist_id || anime.mal_id}/1`}
+                className="btn-brand !px-6 !py-2.5"
+              >
                 <Play className="h-4 w-4 fill-white" /> Watch
               </Link>
               <AddToLibrary anime={anime} />
