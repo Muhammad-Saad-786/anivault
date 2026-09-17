@@ -24,7 +24,6 @@ const links = [
   { to: "/search", label: "Browse", icon: Search },
   { to: "/seasonal", label: "Seasonal", icon: Calendar },
   { to: "/calendar", label: "Calendar", icon: CalendarDays },
-
   { to: "/library", label: "My List", icon: Tv },
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/concierge", label: "AI", icon: Sparkles },
@@ -43,6 +42,7 @@ export default function Navbar() {
     navigate("/");
     setMenuOpen(false);
   };
+
   const onSubmit = (e) => {
     e.preventDefault();
     const query = q.trim();
@@ -86,7 +86,7 @@ export default function Navbar() {
           ))}
         </nav>
 
-        {/* Search */}
+        {/* Search (desktop) */}
         <form
           onSubmit={onSubmit}
           className="ml-auto hidden max-w-xs flex-1 md:block"
@@ -102,12 +102,11 @@ export default function Navbar() {
           </div>
         </form>
 
-        {/* Right */}
+        {/* Right side */}
         <div className="ml-auto flex items-center gap-2 md:ml-0">
-          <NotificationBell />
-
-          {user ? (
-            <div className="relative">
+          {/* User avatar dropdown — desktop only */}
+          {user && (
+            <div className="relative hidden md:block">
               <button
                 onClick={() => setMenuOpen((v) => !v)}
                 className="flex items-center gap-2 rounded-full border border-border-dark bg-surface-card px-2 py-1.5 hover:bg-surface-elevated"
@@ -188,24 +187,27 @@ export default function Navbar() {
                 </>
               )}
             </div>
-          ) : (
-            <>
-              <Link to="/login" className="btn-brand hidden md:inline-flex">
-                Sign in
-              </Link>
-              <button
-                onClick={() => setMobileOpen((v) => !v)}
-                className="btn-ghost !px-2.5 md:hidden"
-                aria-label="Menu"
-              >
-                {mobileOpen ? (
-                  <X className="h-5 w-5" />
-                ) : (
-                  <Menu className="h-5 w-5" />
-                )}
-              </button>
-            </>
           )}
+
+          {/* Sign in button — desktop only, when logged out */}
+          {!user && (
+            <Link to="/login" className="btn-brand hidden md:inline-flex">
+              Sign in
+            </Link>
+          )}
+
+          {/* Hamburger — mobile only, always visible */}
+          <button
+            onClick={() => setMobileOpen((v) => !v)}
+            className="btn-ghost !px-2.5 md:hidden"
+            aria-label="Menu"
+          >
+            {mobileOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
+          </button>
         </div>
       </div>
 
@@ -213,6 +215,7 @@ export default function Navbar() {
       {mobileOpen && (
         <div className="border-t border-border-dark bg-surface-darker md:hidden">
           <div className="space-y-3 px-4 py-4">
+            {/* Search (mobile) */}
             <form onSubmit={onSubmit}>
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
@@ -224,6 +227,8 @@ export default function Navbar() {
                 />
               </div>
             </form>
+
+            {/* Primary nav */}
             <nav className="grid grid-cols-2 gap-2">
               {links.map(({ to, label, icon: Icon }) => (
                 <NavLink
@@ -245,13 +250,97 @@ export default function Navbar() {
                 </NavLink>
               ))}
             </nav>
-            <Link
-              to="/login"
-              onClick={() => setMobileOpen(false)}
-              className="btn-brand w-full"
-            >
-              Sign in
-            </Link>
+
+            {/* User section (when logged in) */}
+            {user && (
+              <>
+                <div className="h-px bg-border-dark" />
+                <div className="flex items-center gap-3 rounded-lg border border-border-dark bg-surface-card p-3">
+                  {profile?.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt=""
+                      className="h-9 w-9 rounded-full"
+                    />
+                  ) : (
+                    <span className="grid h-9 w-9 place-items-center rounded-full bg-brand text-xs font-black text-white">
+                      {(profile?.username || user.email)?.[0]?.toUpperCase()}
+                    </span>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="line-clamp-1 text-sm font-semibold">
+                      {profile?.display_name || profile?.username || "Account"}
+                    </p>
+                    <Link
+                      to={`/u/${profile?.username}`}
+                      onClick={() => setMobileOpen(false)}
+                      className="text-[11px] text-text-muted hover:text-brand"
+                    >
+                      View profile →
+                    </Link>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <Link
+                    to="/dashboard"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-text-secondary hover:bg-surface-elevated"
+                  >
+                    <LayoutDashboard className="h-4 w-4" /> Dashboard
+                  </Link>
+                  <Link
+                    to="/stats"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-text-secondary hover:bg-surface-elevated"
+                  >
+                    <Sparkles className="h-4 w-4" /> Stats
+                  </Link>
+                  <Link
+                    to="/wrapped"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-text-secondary hover:bg-surface-elevated"
+                  >
+                    <Sparkles className="h-4 w-4" /> Wrapped
+                  </Link>
+                  <Link
+                    to="/lists"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-text-secondary hover:bg-surface-elevated"
+                  >
+                    <List className="h-4 w-4" /> My Lists
+                  </Link>
+                  <Link
+                    to="/activity"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-text-secondary hover:bg-surface-elevated"
+                  >
+                    <ActivityIcon className="h-4 w-4" /> Activity
+                  </Link>
+                </div>
+
+                <button
+                  onClick={() => {
+                    handleSignOut();
+                    setMobileOpen(false);
+                  }}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg border border-brand/40 px-3 py-2 text-sm font-semibold text-brand hover:bg-brand/10"
+                >
+                  <LogOut className="h-4 w-4" /> Sign out
+                </button>
+              </>
+            )}
+
+            {/* Sign in (when logged out) */}
+            {!user && (
+              <Link
+                to="/login"
+                onClick={() => setMobileOpen(false)}
+                className="btn-brand w-full"
+              >
+                Sign in
+              </Link>
+            )}
           </div>
         </div>
       )}
