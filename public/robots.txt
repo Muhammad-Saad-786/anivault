@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /library
+Disallow: /dashboard
+Disallow: /stats
+Disallow: /wrapped
+Disallow: /activity
+Disallow: /notifications
+Disallow: /lists
+
+Sitemap: https://anivault.saadasim.me/sitemap.xml

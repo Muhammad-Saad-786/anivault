@@ -1,5 +1,10 @@
+// src/components/anime/AnimeGrid.jsx
 import AnimeCard from "./AnimeCard";
 import { cn } from "@/lib/utils";
+
+function getKey(a) {
+  return a.anilist_id || a.mal_id || a.id;
+}
 
 export default function AnimeGrid({ items = [], className }) {
   if (!items.length) return null;
@@ -11,7 +16,7 @@ export default function AnimeGrid({ items = [], className }) {
       )}
     >
       {items.map((a) => (
-        <AnimeCard key={a.mal_id} anime={a} />
+        <AnimeCard key={getKey(a)} anime={a} />
       ))}
     </div>
   );

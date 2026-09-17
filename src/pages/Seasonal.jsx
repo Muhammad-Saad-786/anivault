@@ -14,6 +14,7 @@ import AnimeGrid from "@/components/anime/AnimeGrid";
 import AnimeCardSkeleton from "@/components/anime/AnimeCardSkeleton";
 import Spinner from "@/components/ui/Spinner";
 import { cn } from "@/lib/utils";
+import SEO from "@/components/SEO";
 
 const TABS = [
   { value: "all", label: "All" },
@@ -126,6 +127,10 @@ export default function Seasonal() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <SEO
+        title={`${season[0].toUpperCase()}${season.slice(1)} ${year} Anime`}
+        description="Explore the latest seasonal anime releases on AniVault."
+      />
       {/* Header */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>

@@ -6,6 +6,7 @@ import { getPersonById } from "@/lib/api/anilist";
 import AnimeCard from "@/components/anime/AnimeCard";
 import Spinner from "@/components/ui/Spinner";
 import { formatCount } from "@/lib/utils";
+import SEO from "@/components/SEO";
 
 export default function Person() {
   const { id } = useParams();
@@ -54,6 +55,16 @@ export default function Person() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <SEO
+        title={p.name.full}
+        description={
+          p.description
+            ? p.description.slice(0, 200)
+            : `Explore ${p.name.full}'s anime work on AniVault.`
+        }
+        image={image}
+        url={`${window.location.origin}/person/${id}`}
+      />
       {/* Header */}
       <div className="flex flex-col gap-6 sm:flex-row">
         {image && (

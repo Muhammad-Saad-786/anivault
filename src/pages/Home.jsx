@@ -8,6 +8,8 @@ import {
 } from "@/lib/api/anilist";
 import { getSeasonContext, formatScore } from "@/lib/utils";
 import AnimeRow from "@/components/anime/AnimeRow";
+import SEO from "@/components/SEO";
+import InstallPrompt from "@/components/pwa/InstallPrompt";
 
 export default function Home() {
   const { season, year } = getSeasonContext();
@@ -37,6 +39,14 @@ export default function Home() {
 
   return (
     <div className="pb-10">
+      {/* SEO */}
+      <SEO
+        title="Discover Anime"
+        description="Trending, top-rated, and seasonal anime. Track what you watch with AniVault."
+      />
+      <div className="mx-auto max-w-7xl px-4 pt-4 sm:px-6 lg:px-8">
+        <InstallPrompt />
+      </div>
       {/* HERO */}
       {hero && (
         <section className="relative h-[420px] w-full overflow-hidden sm:h-[500px]">

@@ -10,6 +10,7 @@ import {
 } from "@/lib/api/notifications";
 import Spinner from "@/components/ui/Spinner";
 import { cn } from "@/lib/utils";
+import SEO from "@/components/SEO";
 
 export default function Notifications() {
   const { user } = useAuth();
@@ -36,6 +37,10 @@ export default function Notifications() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
+      <SEO
+        title="Notifications"
+        description="Stay up to date with your AniVault notifications and anime updates."
+      />
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold">

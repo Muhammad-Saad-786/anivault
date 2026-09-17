@@ -6,6 +6,7 @@ import { getCharacterById } from "@/lib/api/anilist";
 import AnimeCard from "@/components/anime/AnimeCard";
 import Spinner from "@/components/ui/Spinner";
 import { formatCount } from "@/lib/utils";
+import SEO from "@/components/SEO";
 
 export default function Character() {
   const { id } = useParams();
@@ -47,6 +48,16 @@ export default function Character() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <SEO
+        title={c.name.full}
+        description={
+          c.description
+            ? stripDescription(c.description).slice(0, 200)
+            : `Learn more about ${c.name.full} on AniVault.`
+        }
+        image={image}
+        url={`${window.location.origin}/character/${id}`}
+      />
       {/* Header */}
       <div className="flex flex-col gap-6 sm:flex-row">
         {image && (

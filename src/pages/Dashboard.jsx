@@ -24,6 +24,7 @@ import Spinner from "@/components/ui/Spinner";
 import ContinueWatchingCard from "@/components/dashboard/ContinueWatchingCard";
 import UpcomingList from "@/components/dashboard/UpcomingList";
 import { cn, formatCount } from "@/lib/utils";
+import SEO from "@/components/SEO";
 
 export default function Dashboard() {
   const { user, profile } = useAuth();
@@ -93,6 +94,10 @@ export default function Dashboard() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <SEO
+        title="Your Dashboard"
+        description="Review your anime activity, continue watching, and personalized recommendations."
+      />
       {/* Header */}
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>

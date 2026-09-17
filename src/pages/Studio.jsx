@@ -6,6 +6,7 @@ import { getStudioById } from "@/lib/api/anilist";
 import AnimeCard from "@/components/anime/AnimeCard";
 import Spinner from "@/components/ui/Spinner";
 import { formatCount } from "@/lib/utils";
+import SEO from "@/components/SEO";
 
 export default function Studio() {
   const { id } = useParams();
@@ -43,6 +44,11 @@ export default function Studio() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <SEO
+        title={s.name}
+        description={`Explore anime productions from ${s.name} on AniVault.`}
+        url={`${window.location.origin}/studio/${id}`}
+      />
       <div className="mb-8">
         <div className="flex items-center gap-3">
           <div className="grid h-14 w-14 place-items-center rounded-2xl bg-brand/10 text-brand">

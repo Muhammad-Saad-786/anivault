@@ -2,7 +2,7 @@
 import { supabase } from "@/lib/supabase";
 
 /**
- * Full stats for a user. Used by Dashboard, Stats page, and Wrapped.
+ * Full stats for a user.
  */
 export async function getUserStats(userId) {
   const { data, error } = await supabase
@@ -27,7 +27,8 @@ export async function getUserStats(userId) {
     .eq("user_id", userId);
 
   if (error) throw error;
-  const entries = data || [];
+
+  const entries = (data || []).filter((e) => e.anime); // drop orphaned rows
 
   const stats = {
     total: entries.length,
@@ -40,6 +41,8 @@ export async function getUserStats(userId) {
     favorites: 0,
     episodesWatched: 0,
     watchMinutes: 0,
+    watchHours: 0,
+    watchDays: 0,
     ratingsSum: 0,
     ratingsCount: 0,
     avgRating: null,
@@ -61,8 +64,17 @@ export async function getUserStats(userId) {
 
   for (const e of entries) {
     const a = e.anime || {};
-    const perEp = a.duration || 24;
-    const watched = e.progress || 0;
+
+    // duration can be stored as int (minutes) or a string like "24 min per ep"
+    let perEp = 24;
+    if (typeof a.duration === "number" && a.duration > 0) {
+      perEp = a.duration;
+    } else if (typeof a.duration === "string") {
+      const m = /(\d+)/.exec(a.duration);
+      if (m) perEp = Number(m[1]);
+    }
+
+    const watched = Number(e.progress) || 0;
 
     // Status counts
     if (e.status === "completed") stats.completed += 1;
@@ -83,12 +95,12 @@ export async function getUserStats(userId) {
       stats.ratingsCount += 1;
     }
 
-    // Genre / studio counts
+    // Genre / studio / year counts
     for (const g of a.genres || []) genres[g] = (genres[g] || 0) + 1;
     for (const s of a.studios || []) studios[s] = (studios[s] || 0) + 1;
     if (a.year) years[a.year] = (years[a.year] || 0) + 1;
 
-    // Monthly completions (this year)
+    // Monthly completions (this year only)
     if (e.status === "completed" && e.finished_at) {
       const d = new Date(e.finished_at);
       if (d.getFullYear() === currentYear) {
@@ -98,13 +110,13 @@ export async function getUserStats(userId) {
     }
   }
 
-  stats.watchDays = +(stats.watchMinutes / 60 / 24).toFixed(1);
   stats.watchHours = Math.round(stats.watchMinutes / 60);
+  stats.watchDays = +(stats.watchMinutes / 60 / 24).toFixed(1);
   stats.avgRating = stats.ratingsCount
     ? +(stats.ratingsSum / stats.ratingsCount).toFixed(1)
     : null;
 
-  // Top lists
+  // Top N lists
   const topOf = (obj, limit = 8) =>
     Object.entries(obj)
       .sort((a, b) => b[1] - a[1])
@@ -119,7 +131,7 @@ export async function getUserStats(userId) {
   stats.favoriteGenre = stats.genreBreakdown[0]?.name || null;
   stats.favoriteStudio = stats.studioBreakdown[0]?.name || null;
 
-  // Top rated (user's own ratings)
+  // Top rated by user's own rating
   stats.topRated = entries
     .filter((e) => e.rating)
     .sort((a, b) => Number(b.rating) - Number(a.rating))
@@ -150,9 +162,8 @@ export async function getUserStats(userId) {
   return stats;
 }
 
-/**
- * Continue watching — sorted by most recently updated, watching only.
- */
+/* ---------------- Continue Watching ---------------- */
+
 export async function getContinueWatching(userId, limit = 12) {
   const { data, error } = await supabase
     .from("user_library")
@@ -163,23 +174,25 @@ export async function getContinueWatching(userId, limit = 12) {
     `,
     )
     .eq("user_id", userId)
-    .eq("status", "watching")
+    .in("status", ["watching", "rewatching"])
     .order("updated_at", { ascending: false })
     .limit(limit);
 
   if (error) throw error;
-  return (data || []).map((e) => ({
-    ...e.anime,
-    progress: e.progress,
-    totalEpisodes: e.anime?.episodes || 0,
-    nextEpisode: (e.progress || 0) + 1,
-    updatedAt: e.updated_at,
-  }));
+
+  return (data || [])
+    .filter((e) => e.anime)
+    .map((e) => ({
+      ...e.anime,
+      progress: e.progress || 0,
+      totalEpisodes: e.anime?.episodes || 0,
+      nextEpisode: (e.progress || 0) + 1,
+      updatedAt: e.updated_at,
+    }));
 }
 
-/**
- * Recently added — all statuses, newest first.
- */
+/* ---------------- Recently Added ---------------- */
+
 export async function getRecentlyAdded(userId, limit = 12) {
   const { data, error } = await supabase
     .from("user_library")
@@ -194,19 +207,21 @@ export async function getRecentlyAdded(userId, limit = 12) {
     .limit(limit);
 
   if (error) throw error;
-  return (data || []).map((e) => ({ ...e.anime, addedAt: e.created_at }));
+
+  return (data || [])
+    .filter((e) => e.anime)
+    .map((e) => ({ ...e.anime, addedAt: e.created_at }));
 }
 
-/**
- * Favorites.
- */
+/* ---------------- Favorites ---------------- */
+
 export async function getFavorites(userId, limit = 12) {
   const { data, error } = await supabase
     .from("user_library")
     .select(
       `
       id,
-      anime:anime_cache (id, title_en, title_romaji, poster_url, episodes, type, year, score)
+      anime:anime_cache (id, title_en, title_romaji, poster_url, episodes, type, year, score, anilist_id)
     `,
     )
     .eq("user_id", userId)
@@ -215,14 +230,14 @@ export async function getFavorites(userId, limit = 12) {
     .limit(limit);
 
   if (error) throw error;
-  return (data || []).map((e) => e.anime);
+
+  return (data || [])
+    .filter((e) => e.anime)
+    .map((e) => ({ ...e.anime, id: e.anime.id }));
 }
 
-/**
- * Upcoming episodes for the user's watching list.
- * Uses anime_cache.broadcast which contains next_episode + airing_at (unix).
- * If a show doesn't have that info, it's filtered out.
- */
+/* ---------------- Upcoming Episodes ---------------- */
+
 export async function getUpcomingEpisodes(userId, daysAhead = 14) {
   const { data, error } = await supabase
     .from("user_library")
@@ -241,6 +256,7 @@ export async function getUpcomingEpisodes(userId, daysAhead = 14) {
   const cutoff = now + daysAhead * 86400;
 
   return (data || [])
+    .filter((e) => e.anime)
     .map((e) => {
       const b = e.anime?.broadcast;
       if (!b?.airing_at) return null;

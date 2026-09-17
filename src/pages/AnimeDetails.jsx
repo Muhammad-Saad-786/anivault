@@ -26,12 +26,15 @@ import StaffTab from "@/components/anime/StaffTab";
 import RelationsTab from "@/components/anime/RelationsTab";
 import WatchOrder from "@/components/anime/WatchOrder";
 import Spinner from "@/components/ui/Spinner";
-
+import ReviewsTab from "@/components/reviews/ReviewsTab";
+import AddToListMenu from "@/components/lists/AddToListMenu";
+import SEO from "@/components/SEO";
 const TABS = [
   { value: "overview", label: "Overview" },
   { value: "characters", label: "Characters" },
   { value: "staff", label: "Staff" },
   { value: "relations", label: "Relations" },
+  { value: "reviews", label: "Reviews" },
 ];
 
 export default function AnimeDetails() {
@@ -130,6 +133,14 @@ export default function AnimeDetails() {
 
   return (
     <div>
+      <SEO
+        title={title}
+        description={anime.synopsis?.slice(0, 200)}
+        image={anime.banner_url || poster}
+        url={`${window.location.origin}/anime/${id}`}
+        type="video.tv_show"
+      />
+
       {/* Banner */}
       <div className="relative h-56 w-full overflow-hidden bg-surface-darker sm:h-72 lg:h-80">
         <img
@@ -197,6 +208,7 @@ export default function AnimeDetails() {
                 <Play className="h-4 w-4 fill-white" /> Watch
               </Link>
               <AddToLibrary anime={anime} />
+              <AddToListMenu anime={anime} />
             </div>
 
             {anime.synopsis && (
@@ -332,6 +344,7 @@ export default function AnimeDetails() {
         {tab === "characters" && <CharactersTab animeId={anime.anilist_id} />}
         {tab === "staff" && <StaffTab animeId={anime.anilist_id} />}
         {tab === "relations" && <RelationsTab anime={anime} />}
+        {tab === "reviews" && <ReviewsTab animeId={anime.mal_id} />}
       </div>
     </div>
   );

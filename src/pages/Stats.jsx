@@ -19,6 +19,7 @@ import { getUserStats } from "@/lib/api/stats";
 import Spinner from "@/components/ui/Spinner";
 import AnimeCard from "@/components/anime/AnimeCard";
 import { cn, formatCount } from "@/lib/utils";
+import SEO from "@/components/SEO";
 
 const GENRE_COLORS = [
   "#f60200",
@@ -65,6 +66,10 @@ export default function Stats() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <SEO
+        title="Your Anime Stats"
+        description="See your anime watching history, ratings, favorites, and viewing trends."
+      />
       {/* Header */}
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>

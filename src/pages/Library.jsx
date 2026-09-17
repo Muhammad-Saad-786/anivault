@@ -14,6 +14,7 @@ import {
   X,
   RotateCcw,
 } from "lucide-react";
+import SEO from "@/components/SEO";
 
 const TABS = [
   { value: "watching", label: "Watching", icon: Play },
@@ -49,6 +50,10 @@ export default function Library() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <SEO
+        title="My Library"
+        description="Track your anime, watch progress, favorites, and personal lists in AniVault."
+      />
       <div className="mb-6">
         <h1 className="text-2xl font-black sm:text-3xl">My Library</h1>
         <p className="text-sm text-text-secondary">

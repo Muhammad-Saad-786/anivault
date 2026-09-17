@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { Mail, Lock } from "lucide-react";
 import Spinner from "@/components/ui/Spinner";
+import SEO from "@/components/SEO";
 
 function ChromeIcon({ className }) {
   return (
@@ -57,6 +58,7 @@ export default function Login() {
 
   return (
     <div className="mx-auto grid min-h-[70vh] max-w-md place-items-center px-4">
+      <SEO title="Sign In" description="Sign in to your AniVault account." />
       <div className="card w-full p-8">
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-black">

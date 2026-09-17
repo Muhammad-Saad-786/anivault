@@ -11,12 +11,13 @@ import {
   Clock,
   Heart,
 } from "lucide-react";
-import html2canvas from "html2canvas";
+import { toPng } from "html-to-image";
 import { useAuth } from "@/hooks/useAuth";
 import { getUserStats } from "@/lib/api/stats";
 import Spinner from "@/components/ui/Spinner";
 import AlertDialog from "@/components/ui/AlertDialog";
 import { formatCount } from "@/lib/utils";
+import SEO from "@/components/SEO";
 
 export default function Wrapped() {
   const { user, profile } = useAuth();
@@ -58,16 +59,52 @@ export default function Wrapped() {
   const download = async () => {
     if (!cardRef.current) return;
     setDownloading(true);
+
     try {
-      const canvas = await html2canvas(cardRef.current, {
+      // Wait for all images (AniList posters, avatar) to finish loading
+      const images = cardRef.current.querySelectorAll("img");
+      await Promise.all(
+        Array.from(images).map(
+          (img) =>
+            new Promise((resolve) => {
+              if (img.complete) return resolve();
+              img.onload = resolve;
+              img.onerror = resolve;
+            }),
+        ),
+      );
+
+      // Give fonts + layout a frame to settle
+      await new Promise((r) =>
+        requestAnimationFrame(() => requestAnimationFrame(r)),
+      );
+
+      const dataUrl = await toPng(cardRef.current, {
+        cacheBust: true, // avoids cached CORS taint
+        pixelRatio: 2, // 2x = retina quality
         backgroundColor: "#0d0d0d",
-        scale: 2,
-        logging: false,
+        skipFonts: false,
+        filter: (node) => {
+          // Optional: skip any button overlays
+          return node.tagName !== "BUTTON";
+        },
       });
+
+      // Convert dataUrl → blob → trigger download
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
-      link.download = `anivault-wrapped-${year}.png`;
-      link.href = canvas.toDataURL("image/png");
+      link.download = `anivault-wrapped-${year}-${profile?.username || "me"}.png`;
+      link.href = url;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("[wrapped] download failed", err);
+      alert("Could not generate image. Try again or take a manual screenshot.");
     } finally {
       setDownloading(false);
     }
@@ -89,6 +126,10 @@ export default function Wrapped() {
 
   return (
     <>
+      <SEO
+        title={`${year} Anime Wrapped`}
+        description="See your year in anime with AniVault Wrapped."
+      />
       <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
         {/* Share bar */}
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
@@ -143,6 +184,7 @@ export default function Wrapped() {
                   <img
                     src={topAnime.poster_url}
                     alt={topAnime.title_en || topAnime.title_romaji}
+                    crossOrigin="anonymous"
                     className="h-40 w-28 rounded-xl object-cover shadow-2xl ring-2 ring-brand/50 sm:h-56 sm:w-40"
                   />
                   <div className="text-center sm:text-left">

@@ -11,11 +11,13 @@ import {
   LogOut,
   Sparkles,
   CalendarDays,
+  User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import NotificationBell from "./NotificationBell";
+import { List, Activity as ActivityIcon } from "lucide-react";
 
 const links = [
   { to: "/", label: "Home", icon: Compass },
@@ -53,12 +55,13 @@ export default function Navbar() {
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <Link to="/" className="flex shrink-0 items-center gap-2">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand text-white font-black">
-            A
-          </span>
-          <span className="text-lg font-extrabold tracking-tight">
-            Ani<span className="text-brand">Vault</span>
-          </span>
+          <img
+            src="/anivault.png"
+            alt="AniVault"
+            className="h-8 w-auto"
+            width={32}
+            height={32}
+          />
         </Link>
 
         {/* Desktop nav */}
@@ -152,6 +155,27 @@ export default function Navbar() {
                       className="flex items-center gap-2 px-3 py-2.5 text-sm hover:bg-surface-elevated"
                     >
                       <Sparkles className="h-4 w-4" /> Wrapped
+                    </Link>
+                    <Link
+                      to="/lists"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2.5 text-sm hover:bg-surface-elevated"
+                    >
+                      <List className="h-4 w-4" /> My Lists
+                    </Link>
+                    <Link
+                      to="/activity"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2.5 text-sm hover:bg-surface-elevated"
+                    >
+                      <ActivityIcon className="h-4 w-4" /> Activity
+                    </Link>
+                    <Link
+                      to={`/u/${profile?.username}`}
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2.5 text-sm hover:bg-surface-elevated"
+                    >
+                      <User className="h-4 w-4" /> My Profile
                     </Link>
                     <div className="h-px bg-border-dark" />
                     <button

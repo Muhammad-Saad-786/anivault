@@ -8,6 +8,7 @@ import { buildConciergeSystemPrompt } from "@/lib/ai/context";
 import { searchAnimeAniList } from "@/lib/api/anilist";
 import AnimeCard from "@/components/anime/AnimeCard";
 import { cn } from "@/lib/utils";
+import SEO from "@/components/SEO";
 
 const EXAMPLE_PROMPTS = [
   "Something dark like Attack on Titan but under 30 episodes",
@@ -76,6 +77,10 @@ export default function Concierge() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
+      <SEO
+        title="AI Anime Concierge"
+        description="Get personalized anime recommendations from AniVault's AI concierge."
+      />
       {/* Header */}
       <div className="mb-8 text-center">
         <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-brand shadow-glow">

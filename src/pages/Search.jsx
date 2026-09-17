@@ -13,6 +13,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import AnimeGrid from "@/components/anime/AnimeGrid";
 import AnimeCardSkeleton from "@/components/anime/AnimeCardSkeleton";
 import { cn } from "@/lib/utils";
+import SEO from "@/components/SEO";
 
 const TYPES = ["tv", "movie", "ova", "ona", "special"];
 const STATUSES = ["airing", "complete", "upcoming"];
@@ -123,6 +124,10 @@ export default function Search() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <SEO
+        title="Browse Anime"
+        description="Search and discover anime by title, genre, season, and more on AniVault."
+      />
       {/* Header */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>

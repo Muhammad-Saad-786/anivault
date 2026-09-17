@@ -3,6 +3,18 @@ import { ChevronRight, RefreshCw } from "lucide-react";
 import AnimeCard from "./AnimeCard";
 import AnimeCardSkeleton from "./AnimeCardSkeleton";
 
+/**
+ * Resolve the best unique ID for React keys across all anime shapes:
+ *   - Jikan-normalized: `mal_id`
+ *   - Raw AniList:      `id`
+ *   - Supabase cache:   `id`
+ */
+function getKey(a) {
+  return (
+    a.anilist_id || a.mal_id || a.id || Math.random().toString(36).slice(2)
+  );
+}
+
 export default function AnimeRow({
   title,
   items,
@@ -51,7 +63,7 @@ export default function AnimeRow({
           {!loading &&
             !error &&
             items?.map((a) => (
-              <div key={a.mal_id} className="w-32 shrink-0 sm:w-40">
+              <div key={getKey(a)} className="w-32 shrink-0 sm:w-40">
                 <AnimeCard anime={a} />
               </div>
             ))}

@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Plus,
   ChevronDown,
-  Heart,
   Bookmark,
   Play,
   Pause,
@@ -15,6 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { getLibraryEntry, setStatus, toggleFavorite } from "@/lib/api/library";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import FavoriteButton from "@/components/library/FavoriteButton";
 
 const STATUSES = [
   {
@@ -66,13 +66,35 @@ export default function AddToLibrary({ anime, size = "md" }) {
     mutationFn: (status) => setStatus(user.id, anime, status),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["library"] });
+      qc.invalidateQueries({
+        queryKey: ["library", "entry", user.id, anime.mal_id],
+      });
+      qc.invalidateQueries({ queryKey: ["stats"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
       setOpen(false);
+    },
+    onError: (err) => {
+      // eslint-disable-next-line no-console
+      console.error("[status] failed:", err.message);
+      alert("Could not update status: " + err.message);
     },
   });
 
   const favMutation = useMutation({
     mutationFn: (next) => toggleFavorite(user.id, anime, next),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["library"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["library"] });
+      qc.invalidateQueries({
+        queryKey: ["library", "entry", user.id, anime.mal_id],
+      });
+      qc.invalidateQueries({ queryKey: ["stats"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+    onError: (err) => {
+      // eslint-disable-next-line no-console
+      console.error("[favorite] failed:", err.message);
+      alert("Could not update favorite: " + err.message);
+    },
   });
 
   if (!user) {
@@ -115,23 +137,7 @@ export default function AddToLibrary({ anime, size = "md" }) {
           )}
         </button>
 
-        <button
-          onClick={() => favMutation.mutate(!entry?.is_favorite)}
-          className={cn(
-            "grid place-items-center rounded-lg border border-border-dark bg-surface-card transition hover:bg-surface-elevated",
-            size === "sm" ? "h-9 w-9" : "h-10 w-10",
-          )}
-          aria-label="Favorite"
-        >
-          <Heart
-            className={cn(
-              "h-4 w-4 transition",
-              entry?.is_favorite
-                ? "fill-status-favorite text-status-favorite"
-                : "text-text-secondary",
-            )}
-          />
-        </button>
+        <FavoriteButton anime={anime} />
       </div>
 
       {open && (

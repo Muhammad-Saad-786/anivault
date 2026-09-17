@@ -1,5 +1,6 @@
 // src/pages/Watch.jsx
 import { useState, useMemo, useEffect } from "react";
+import { track } from "@/lib/analytics.js";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -21,6 +22,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { getLibraryEntry, updateProgress } from "@/lib/api/library";
 import { cn } from "@/lib/utils";
 import Spinner from "@/components/ui/Spinner";
+import SEO from "@/components/SEO";
 
 export default function Watch() {
   const { animeId, episode: episodeParam } = useParams();
@@ -63,25 +65,35 @@ export default function Watch() {
   /* ---------------- Auto-update progress ---------------- */
   useEffect(() => {
     if (!user || !anime?.mal_id) return;
-    if (libraryEntry && libraryEntry.progress >= currentEpisode) return;
 
     let cancelled = false;
     const timer = setTimeout(async () => {
       try {
+        // Always call — the API is idempotent and handles promotion.
         await updateProgress(user.id, anime.mal_id, currentEpisode);
         if (!cancelled) {
+          track("watch_start", {
+            animeId: anime.mal_id,
+            animeTitle: anime.title_english || anime.title_romaji,
+            episode: currentEpisode,
+            provider: providerId,
+            lang,
+          });
           qc.invalidateQueries({ queryKey: ["library"] });
+          qc.invalidateQueries({ queryKey: ["stats"] });
+          qc.invalidateQueries({ queryKey: ["dashboard"] });
         }
-      } catch {
-        /* silent */
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn("[watch] progress update failed", err.message);
       }
-    }, 3000); // wait 3s before marking — gives time for iframe to load
+    }, 2500);
 
     return () => {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [user, anime, currentEpisode, libraryEntry, qc]);
+  }, [user?.id, anime?.mal_id, currentEpisode, qc]);
 
   /* ---------------- Navigation ---------------- */
   const totalEpisodes = anime?.episodes || 0;
@@ -121,6 +133,13 @@ export default function Watch() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <SEO
+        title={`${animeTitle} Episode ${currentEpisode}`}
+        description={`Watch ${animeTitle} episode ${currentEpisode} on AniVault.`}
+        image={anime.banner_url || anime.images?.jpg?.large_image_url}
+        url={`${window.location.origin}/watch/${animeId}/${currentEpisode}`}
+        type="video.tv_show"
+      />
       {/* Top bar */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <Link

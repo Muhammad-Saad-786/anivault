@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { Mail, Lock, User } from "lucide-react";
 import Spinner from "@/components/ui/Spinner";
+import SEO from "@/components/SEO";
 
 function ChromeIcon({ className }) {
   return (
@@ -66,6 +67,10 @@ export default function Signup() {
 
   return (
     <div className="mx-auto grid min-h-[70vh] max-w-md place-items-center px-4">
+      <SEO
+        title="Create Your Account"
+        description="Join AniVault to track, rate, and discover anime."
+      />
       <div className="card w-full p-8">
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-black">
